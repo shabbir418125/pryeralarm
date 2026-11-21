@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ic_bg">#5B0EBF</color>
+    <style name="Theme.PrayerAlarm" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">#16055A</item>
+        <item name="android:statusBarColor">#0E0140</item>
+        <item name="android:navigationBarColor">#0E0140</item>
+    </style>
+</resources>
