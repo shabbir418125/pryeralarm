@@ -35,7 +35,27 @@ object AlarmScheduler {
             doSchedule(ctx)
         } catch (e: Exception) {
             e.printStackTrace()
+            DebugLog.add(ctx, "অ্যালার্ম সেট করতে ত্রুটি: ${e.javaClass.simpleName} ${e.message}")
         }
+    }
+
+    /** Real alarm through AlarmManager -> AlarmReceiver -> AdhanService, firing after [delaySec] seconds. */
+    fun scheduleTest(ctx: Context, delaySec: Int = 60) {
+        val app = ctx.applicationContext
+        val am = app.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val i = Intent(app, AlarmReceiver::class.java)
+            .putExtra(EXTRA_PRAYER, Prayer.DHUHR.id)
+            .putExtra(EXTRA_KIND, Times.KIND_ADHAN)
+            .putExtra(EXTRA_MINUTES, 0)
+        val pi = PendingIntent.getBroadcast(
+            app, 1003, i, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        val show = PendingIntent.getActivity(
+            app, REQ_SHOW, Intent(app, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE
+        )
+        val at = System.currentTimeMillis() + delaySec * 1000L
+        am.setAlarmClock(AlarmManager.AlarmClockInfo(at, show), pi)
+        DebugLog.add(app, "টেস্ট অ্যালার্ম সেট হয়েছে, বাজবে ${DebugLog.fmt(at)}")
     }
 
     private fun doSchedule(ctx: Context) {
@@ -55,5 +75,6 @@ object AlarmScheduler {
             AlarmManager.AlarmClockInfo(next.time, show),
             alarmIntent(app, next.prayer, next.kind, next.minutes)
         )
+        DebugLog.add(app, "পরের অ্যালার্ম: ${next.prayer.bn} (${next.kind}) ${DebugLog.fmt(next.time)}")
     }
 }

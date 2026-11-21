@@ -73,17 +73,18 @@ class AdhanService : Service() {
         val minutes = intent?.getIntExtra(EXTRA_MINUTES, 0) ?: 0
         releaseAudio() // a new prayer replaces anything still playing
         finished = false
+        DebugLog.add(this, "সার্ভিস চালু: ${prayer.bn} ($kind)")
         try {
             startForegroundCompat(prayer, kind, minutes)
         } catch (e: Exception) {
             e.printStackTrace()
-            stopSelf()
-            return START_NOT_STICKY
+            DebugLog.add(this, "নোটিফিকেশন/ফোরগ্রাউন্ড ত্রুটি: ${e.javaClass.simpleName} ${e.message}")
         }
         try {
             play(prayer, kind, minutes)
         } catch (e: Exception) {
             e.printStackTrace()
+            DebugLog.add(this, "বাজাতে ত্রুটি: ${e.javaClass.simpleName} ${e.message}")
             finish()
         }
         return START_NOT_STICKY
@@ -192,13 +193,16 @@ class AdhanService : Service() {
     /** Adhan file: per-prayer custom → default adhan (e.g. Makkah) → bundled raw resource. */
     private fun adhanSource(prayer: Prayer, s: AppSettings): (MediaPlayer.() -> Unit)? {
         s.customPath(prayer)?.takeIf { File(it).exists() }?.let { path ->
+            DebugLog.add(this, "আজান ফাইল: ওয়াক্তের কাস্টম MP3")
             return { setDataSource(path) }
         }
         s.defaultAdhanPath?.takeIf { File(it).exists() }?.let { path ->
+            DebugLog.add(this, "আজান ফাইল: সেটিংসে বাছা মক্কার আজান")
             return { setDataSource(path) }
         }
         val resId = rawResource(prayer)
         if (resId != 0) {
+            DebugLog.add(this, "আজান ফাইল: অ্যাপের ভেতরের MP3")
             return {
                 resources.openRawResourceFd(resId).use {
                     setDataSource(it.fileDescriptor, it.startOffset, it.length)
@@ -222,9 +226,12 @@ class AdhanService : Service() {
                     source = src,
                 )
                 return
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                DebugLog.add(this, "আজান ফাইল বাজেনি: ${e.javaClass.simpleName} ${e.message}")
                 releaseAudio()
             }
+        } else {
+            DebugLog.add(this, "কোনো আজান MP3 নেই, ভয়েস/টোন বাজবে")
         }
         stageReminder(prayer, s, gain)
     }

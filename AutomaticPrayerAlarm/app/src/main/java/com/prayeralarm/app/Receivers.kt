@@ -8,6 +8,7 @@ import androidx.core.content.ContextCompat
 class AlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val id = intent.getStringExtra(EXTRA_PRAYER)
+        DebugLog.add(context, "অ্যালার্ম এসেছে: $id / ${intent.getStringExtra(EXTRA_KIND)}")
         if (Prayer.fromId(id) != null) {
             val svc = Intent(context, AdhanService::class.java)
                 .putExtra(EXTRA_PRAYER, id)
@@ -17,6 +18,7 @@ class AlarmReceiver : BroadcastReceiver() {
                 ContextCompat.startForegroundService(context, svc)
             } catch (e: Exception) {
                 e.printStackTrace()
+                DebugLog.add(context, "সার্ভিস চালু করা যায়নি: ${e.javaClass.simpleName} ${e.message}")
             }
         }
         // chain: schedule the following prayer

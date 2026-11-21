@@ -87,7 +87,29 @@ class MainActivity : ComponentActivity() {
                 else locationPermission.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
             },
             batterySettings = {
-                startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
+                try {
+                    startActivity(
+                        Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
+                            .setData(Uri.parse("package:$packageName"))
+                    )
+                } catch (e: Exception) {
+                    startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
+                }
+            },
+            appSettings = {
+                startActivity(
+                    Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                        .setData(Uri.parse("package:$packageName"))
+                )
+            },
+            testAlarm = {
+                AlarmScheduler.scheduleTest(this, 60)
+                Toast.makeText(
+                    this,
+                    "১ মিনিট পরে আজান বাজবে। এখন স্ক্রিন অফ করে অপেক্ষা করুন",
+                    Toast.LENGTH_LONG
+                ).show()
+                rev.intValue++
             },
             notificationPermission = { requestNotificationPermission() },
             testPlay = { p ->

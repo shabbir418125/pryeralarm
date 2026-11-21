@@ -32,6 +32,9 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import com.prayeralarm.app.DISTRICTS
+import com.prayeralarm.app.DebugLog
+import android.content.Context
+import android.os.PowerManager
 import com.prayeralarm.app.R
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -117,6 +120,8 @@ class Actions(
     val pickReminder: () -> Unit,
     val useGps: () -> Unit,
     val batterySettings: () -> Unit,
+    val appSettings: () -> Unit,
+    val testAlarm: () -> Unit,
     val notificationPermission: () -> Unit,
     val testPlay: (Prayer) -> Unit,
     val stopPlay: () -> Unit,
@@ -519,6 +524,39 @@ private fun ConfigScreen(settings: AppSettings, rev: Int, onChanged: () -> Unit,
             Text("সেটিংস", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
         }
 
+        SectionTitle("অ্যালার্ম পরীক্ষা ও অবস্থা")
+        val notifOk = androidx.core.app.NotificationManagerCompat.from(cfgCtx).areNotificationsEnabled()
+        val battOk = try {
+            (cfgCtx.getSystemService(Context.POWER_SERVICE) as PowerManager).isIgnoringBatteryOptimizations(cfgCtx.packageName)
+        } catch (_: Exception) { false }
+        val nextEv = Times.nextEvent(System.currentTimeMillis(), settings)
+        StatusLine("নোটিফিকেশন চালু", notifOk)
+        StatusLine("ব্যাটারি সীমা বন্ধ (Unrestricted)", battOk)
+        Text(
+            if (nextEv != null) "পরের অ্যালার্ম: ${nextEv.prayer.bn} - ${DebugLog.fmt(nextEv.time).bn()}" else "কোনো অ্যালার্ম সেট নেই",
+            fontSize = 13.sp, color = Muted, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+        )
+        Row(Modifier.padding(horizontal = 16.dp, vertical = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(
+                onClick = actions.testAlarm,
+                colors = ButtonDefaults.buttonColors(containerColor = Violet, contentColor = Color.White),
+            ) { Text("১ মিনিট পরে টেস্ট আজান") }
+            OutlinedButton(onClick = actions.appSettings) { Text("অ্যাপ সেটিংস") }
+        }
+        val logText = DebugLog.read(cfgCtx)
+        Text(
+            "ঘটনার তালিকা (সবার উপরে সর্বশেষ):",
+            fontSize = 12.sp, color = Muted, modifier = Modifier.padding(16.dp, 8.dp, 16.dp, 0.dp),
+        )
+        Text(
+            if (logText.isBlank()) "এখনো কিছু নেই" else logText.bn(),
+            fontSize = 11.sp, color = Lavender, modifier = Modifier.padding(horizontal = 16.dp),
+        )
+        Row(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            TextButton(onClick = { onChanged() }) { Text("রিফ্রেশ") }
+            TextButton(onClick = { DebugLog.clear(cfgCtx); onChanged() }) { Text("তালিকা মুছুন") }
+        }
+
         SectionTitle("অবস্থান")
         OutlinedButton(onClick = { showDistricts = true }, modifier = Modifier.padding(horizontal = 16.dp)) {
             Icon(Icons.Filled.LocationOn, null)
@@ -870,6 +908,18 @@ private fun AudioRow(title: String, subtitle: String, hasValue: Boolean, onPick:
             OutlinedButton(onClick = onPick) { Text("ফাইল বাছুন") }
             if (hasValue) TextButton(onClick = onClear) { Text("মুছুন") }
         }
+    }
+}
+
+@Composable
+private fun StatusLine(label: String, ok: Boolean) {
+    Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(label, modifier = Modifier.weight(1f), fontSize = 14.sp)
+        Text(
+            if (ok) "✓ ঠিক আছে" else "✗ বন্ধ",
+            fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
+            color = if (ok) Color(0xFF7CFFB2) else Color(0xFFFF8A80),
+        )
     }
 }
 
