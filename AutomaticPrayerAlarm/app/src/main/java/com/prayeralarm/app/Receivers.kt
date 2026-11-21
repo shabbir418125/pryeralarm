@@ -13,7 +13,11 @@ class AlarmReceiver : BroadcastReceiver() {
                 .putExtra(EXTRA_PRAYER, id)
                 .putExtra(EXTRA_KIND, intent.getStringExtra(EXTRA_KIND) ?: Times.KIND_ADHAN)
                 .putExtra(EXTRA_MINUTES, intent.getIntExtra(EXTRA_MINUTES, 0))
-            ContextCompat.startForegroundService(context, svc)
+            try {
+                ContextCompat.startForegroundService(context, svc)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
         // chain: schedule the following prayer
         AlarmScheduler.scheduleNext(context)

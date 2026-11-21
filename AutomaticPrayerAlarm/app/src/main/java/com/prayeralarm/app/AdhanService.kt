@@ -186,6 +186,8 @@ class AdhanService : Service() {
     }
 
     private var playedAdhan = false
+    private var speakToken = 0
+    private var spoke = false
 
     /** Adhan file: per-prayer custom → default adhan (e.g. Makkah) → bundled raw resource. */
     private fun adhanSource(prayer: Prayer, s: AppSettings): (MediaPlayer.() -> Unit)? {
@@ -274,6 +276,15 @@ class AdhanService : Service() {
 
     /** Bengali TTS with a lowered pitch to sound more masculine; falls back to the default alarm tone. */
     private fun speak(text: String, gain: Float) {
+        val token = ++speakToken
+        spoke = false
+        Handler(Looper.getMainLooper()).postDelayed({
+            // text-to-speech never started (no engine / no Bengali voice / stuck): don't stay silent
+            if (token == speakToken && !finished && !spoke) {
+                releaseAudio()
+                if (playedAdhan) finish() else playDefaultAlarm(gain)
+            }
+        }, 6000)
         var engine: TextToSpeech? = null
         engine = TextToSpeech(this) { status ->
             val e = engine
@@ -289,7 +300,7 @@ class AdhanService : Service() {
             e.setPitch(0.7f)
             e.setSpeechRate(0.85f)
             e.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
-                override fun onStart(utteranceId: String?) {}
+                override fun onStart(utteranceId: String?) { spoke = true }
                 override fun onDone(utteranceId: String?) { finish() }
                 @Deprecated("Deprecated in Java")
                 override fun onError(utteranceId: String?) { finish() }

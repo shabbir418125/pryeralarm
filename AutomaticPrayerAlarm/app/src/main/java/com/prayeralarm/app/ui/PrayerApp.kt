@@ -102,14 +102,14 @@ import java.util.Locale
 import kotlin.math.roundToInt
 
 // Colors taken from the purple studio background of the profile photo
-private val Deep = Color(0xFF0E0140)      // darkest edge of the photo background
-private val Bg = Color(0xFF16055A)        // app background
-private val CardBg = Color(0xFF2A0F82)    // normal card
-private val CardNext = Color(0xFF4B02B0)  // highlighted (next prayer) card
+private val Deep = Color(0xFF05000F)      // darkest edge of the photo background
+private val Bg = Color(0xFF0B0418)        // app background
+private val CardBg = Color(0xFF1A0B3A)    // normal card
+private val CardNext = Color(0xFF38098A)  // highlighted (next prayer) card
 private val Violet = Color(0xFF7103D1)    // bright glow of the photo background
 private val Lavender = Color(0xFFD2B8FF)  // accent text / icons on dark purple
 private val Muted = Color(0xFFB9A8E8)     // secondary text
-private val Outline = Color(0xFF4A2D9E)
+private val Outline = Color(0xFF35206B)
 
 class Actions(
     val pickMp3: (Prayer) -> Unit,
@@ -224,7 +224,7 @@ private fun HomeScreen(
         item {
             Column(
                 Modifier.fillMaxWidth()
-                    .background(Brush.verticalGradient(listOf(Deep, Violet)))
+                    .background(Brush.verticalGradient(listOf(Deep, Color(0xFF3A0A8C))))
                     .statusBarsPadding()
                     .padding(horizontal = 20.dp, vertical = 24.dp)
             ) {
@@ -261,6 +261,25 @@ private fun HomeScreen(
                         color = Color.White, fontSize = 40.sp, fontWeight = FontWeight.Light,
                     )
                     Text("বাকি", color = Color.White.copy(alpha = 0.85f), fontSize = 13.sp)
+                }
+            }
+        }
+        item {
+            val hCtx = LocalContext.current
+            val hasAdhan = settings.defaultAdhanPath != null ||
+                Prayer.entries.any { settings.customPath(it) != null } ||
+                hCtx.resources.getIdentifier("adhan_makkah", "raw", hCtx.packageName) != 0 ||
+                hCtx.resources.getIdentifier("adhan_default", "raw", hCtx.packageName) != 0
+            if (!hasAdhan) {
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF4A1A00)),
+                ) {
+                    Text(
+                        "আজানের কোনো MP3 ফাইল বাছাই করা নেই, তাই ওয়াক্তে আজান বাজবে না (শুধু ভয়েস/অ্যালার্ম টোন)। সেটিংস → \"মক্কার আজান\" থেকে MP3 বাছুন।",
+                        modifier = Modifier.padding(14.dp), fontSize = 13.sp, color = Color(0xFFFFD2B0),
+                    )
                 }
             }
         }
